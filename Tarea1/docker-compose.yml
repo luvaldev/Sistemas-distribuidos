@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  redis-cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 50mb --maxmemory-policy allkeys-lru
+
+  servicio-metricas:
+    build: ./metricas
+    ports:
+      - "5002:5002"
+
+  servicio-respuestas:
+    build: ./respuestas
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./respuestas:/app 
+
+  servicio-cache:
+    build: ./cache
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis-cache
+      - servicio-respuestas
+      - servicio-metricas
+
+  generador-trafico:
+    build: ./trafico
+    depends_on:
+      - servicio-cache
