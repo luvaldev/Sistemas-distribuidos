@@ -21,3 +21,7 @@ Este proyecto evoluciona la arquitectura síncrona de la Tarea 1 hacia una arqui
 ### 3. Generador de Respuestas y Simulación de Fallas
 - **Rol:** Procesa las consultas utilizando el dataset cargado en memoria con Pandas.
 - **Simulación de Falla (Caos):** Se implementó un endpoint para simular una caída temporal del servicio y evaluar el comportamiento de los reintentos en Kafka. 
+
+### 4. Sistema de Métricas
+- **Rol:** Recopila datos del rendimiento de la arquitectura asíncrona para su posterior análisis.
+- **Métricas Registradas:** Throughput, Latencia (p50 y p95), Recoveries (consultas salvadas tras fallos), Retries y eventos de pérdida total (DLQ).
