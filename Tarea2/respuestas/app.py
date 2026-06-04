@@ -50,8 +50,23 @@ def q5_confidence_dist(zona, bins):
     dist = [{"bucket": i, "min": float(edges[i]), "max": float(edges[i+1]), "count": int(counts[i])} for i in range(bins)]
     return {"distribution": dist}
 
+# simulacion de fallas
+falla_simulada = False
+
+@app.route('/toggle-falla', methods=['POST'])
+def toggle_falla():
+    global falla_simulada
+    falla_simulada = not falla_simulada
+    estado = "Activada (Devolviendo error 503)" if falla_simulada else "Desactivada (Operando normal)"
+    return jsonify({"status": f"Simulación de falla {estado}"})
+
 @app.route('/procesar', methods=['GET'])
 def procesar():
+    global falla_simulada
+    
+    if falla_simulada:
+        return jsonify({"error": "falla temporal simulada en el servicio"}), 503
+
     tipo = request.args.get('tipo')
     zona = request.args.get('zona')
     conf = float(request.args.get('conf', 0.0))

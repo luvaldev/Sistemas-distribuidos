@@ -17,3 +17,7 @@ Este proyecto evoluciona la arquitectura síncrona de la Tarea 1 hacia una arqui
 - **Rol:** Es el procesamiento asíncrono, lee las consultas desde Kafka.
 - **Flujo:** Primero verifica si la respuesta esta en Redis (Caché Hit). Si no está, hace una petición al generador de respuestas.
 - **Tolerancia a fallos:** Si el generador de Respuestas está caído o se demora demasiado, el consumidor intercepta el error, incrementa el contador de reintentos y envía el mensaje al tópico `reintentos_topic`. Si supera el límite de intentos (3), el mensaje se envía a la `(DLQ)` (`dlq_topic`) para no perder el registro de la consulta fallida.
+
+### 3. Generador de Respuestas y Simulación de Fallas
+- **Rol:** Procesa las consultas utilizando el dataset cargado en memoria con Pandas.
+- **Simulación de Falla (Caos):** Se implementó un endpoint para simular una caída temporal del servicio y evaluar el comportamiento de los reintentos en Kafka. 
