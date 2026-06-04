@@ -52,4 +52,5 @@ services:
   generador-trafico:
     build: ./trafico
     depends_on:
-      - servicio-cache
+      kafka:
+        condition: service_healthy
