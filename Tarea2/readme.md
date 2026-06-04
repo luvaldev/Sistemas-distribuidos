@@ -25,3 +25,34 @@ Este proyecto evoluciona la arquitectura síncrona de la Tarea 1 hacia una arqui
 ### 4. Sistema de Métricas
 - **Rol:** Recopila datos del rendimiento de la arquitectura asíncrona para su posterior análisis.
 - **Métricas Registradas:** Throughput, Latencia (p50 y p95), Recoveries (consultas salvadas tras fallos), Retries y eventos de pérdida total (DLQ).
+
+---
+
+### Instrucciones de ejecución (Entorno Arch Linux)
+
+Para ejecutar este sistema distribuido, asegúrate de tener **Docker** y **Docker Compose** instalados en tu distribución.
+
+#### 1. Preparación del Entorno
+Asegúrate de que el demonio de Docker esté activo en tu sistema:
+```bash
+sudo systemctl start docker
+```
+
+Para levantar todos los servicios de la Tarea 2 (Kafka, Redis, Consumidores, Métricas y Generador de Tráfico) en segundo plano, ejecútalos desde la carpeta raíz del proyecto:
+```bash
+cd Tarea2
+sudo docker-compose up --build -d
+```
+#### 2. Monitoreo y Simulación de Fallas
+- Ver logs del consumidor (en tiempo real):
+```bash
+sudo docker-compose logs -f consumidor
+```
+- Provocar falla temporal
+```bash
+curl -X POST http://localhost:5001/toggle-falla
+```
+> Con el mismo comando para desactivar las fallas
+
+#### 3. Resultados y metricas
+- Este apartado lo podremos ver en `http://localhost:5002/resumen`
