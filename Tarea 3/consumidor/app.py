@@ -1,7 +1,25 @@
 import redis, requests, json, time
+from datetime import datetime
 from kafka import KafkaConsumer, KafkaProducer
 
 r = redis.Redis(host='redis-cache', port=6379, decode_responses=True) # conexion a redis
+
+metric_producer = KafkaProducer(
+    bootstrap_servers=['kafka:9092'],
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+def enviar_metrica(query_type, latencia_ms, cache_status, retries, status):
+    evento_metrica = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "query_type": query_type,
+        "latency": latencia_ms,
+        "cache_status": cache_status,
+        "retries": retries,
+        "status": status
+    }
+    metric_producer.send('metrics-topic', evento_metrica)
+    metric_producer.flush()
 
 URL_RESPUESTAS = "http://servicio-respuestas:5001/procesar"
 URL_METRICAS = "http://servicio-metricas:5002/registrar"
@@ -46,6 +64,7 @@ for message in consumer:
     if resultado_cache:
         latencia = time.time() - inicio
         requests.post(URL_METRICAS, json={"evento": "hit", "latencia": latencia})
+        enviar_metrica(tipo, latencia * 1000, "hit", data.get('retry_count', 0), "success")
         print(f"[HIT] consulta {data['id']} servida desde cache")
     else:
         # si no esta en cache pasamos a procesar mediante el generador de resp
@@ -59,6 +78,7 @@ for message in consumer:
             
             evento = "recovery" if data['retry_count'] > 0 else "miss"
             requests.post(URL_METRICAS, json={"evento": evento, "latencia": latencia})
+            enviar_metrica(tipo, latencia * 1000, "miss", data.get('retry_count', 0), "success")
             print(f"[{evento.upper()}] consulta {data['id']} procesada")
 
         except requests.exceptions.RequestException as e:
@@ -67,6 +87,8 @@ for message in consumer:
             print(f"[FALLA] intento {data['retry_count']} fallido para consulta {data['id']}: {e}")
             
             requests.post(URL_METRICAS, json={"evento": "falla_temporal"})
+            latencia = time.time() - inicio
+            enviar_metrica(tipo, latencia * 1000, "miss", data['retry_count'], "error")
 
             if data['retry_count'] >= MAX_RETRIES:
                 print(f"[DLQ] consulta {data['id']} excedió los {MAX_RETRIES} intentos. Dead Letter Queue")
